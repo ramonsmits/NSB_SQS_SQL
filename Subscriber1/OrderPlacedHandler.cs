@@ -1,11 +1,7 @@
 ﻿using System.Threading.Tasks;
 using NServiceBus;
-using Shared;
 using System;
-using Shared.Command;
 using Shared.Events;
-
-#region PlaceOrderHandler
 
 public class OrderPlacedHandler : IHandleMessages<OrderPlaced>
 {
@@ -16,5 +12,3 @@ public class OrderPlacedHandler : IHandleMessages<OrderPlaced>
         return Task.CompletedTask;
     }
 }
-
-#endregion

@@ -1,17 +1,10 @@
 ﻿using Infrastructure;
 using NServiceBus;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Subscriber1
 {
     class Subscriber1Config : BaseEndpointConfig
     {
-        #region Constructors
-
         public Subscriber1Config() :
             this(null, false)
         {
@@ -27,7 +20,5 @@ namespace Subscriber1
             var config = base.BuildConfig();
             return config;
         }
-
-        #endregion
     }
 }

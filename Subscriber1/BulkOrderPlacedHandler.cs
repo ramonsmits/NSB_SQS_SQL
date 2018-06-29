@@ -1,11 +1,7 @@
 ﻿using System.Threading.Tasks;
 using NServiceBus;
-using Shared;
 using System;
-using Shared.Command;
 using Shared.Events;
-
-#region BulkOrderPlacedHandler
 
 public class BulkOrderPlacedHandler : IHandleMessages<BulkOrderPlaced>
 {
@@ -15,5 +11,3 @@ public class BulkOrderPlacedHandler : IHandleMessages<BulkOrderPlaced>
         return Task.CompletedTask;
     }
 }
-
-#endregion

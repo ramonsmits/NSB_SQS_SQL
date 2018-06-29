@@ -1,17 +1,6 @@
-﻿using Amazon;
-using Amazon.S3;
-using Amazon.SQS;
-using Infrastructure;
-using NServiceBus;
-using NServiceBus.Persistence;
-using NServiceBus.Transport.SQLServer;
-using Shared;
+﻿using Infrastructure;
 using Shared.Command;
 using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Client
@@ -19,16 +8,18 @@ namespace Client
     class Program
     {
         static SendAndProcessEndpoint<BaseEndpointConfig> _endpoint;
-        static void Main(string[] args)
+        static void Main()
         {
             _endpoint = new SendAndProcessEndpoint<BaseEndpointConfig>(new ClientConfig());
             AsyncMain().GetAwaiter().GetResult();
         }
 
-        private static async Task AsyncMain()
+        static async Task AsyncMain()
         {
             _endpoint.Initialize();
-            await _endpoint.StartEndpoint();
+            await _endpoint.StartEndpoint()
+                .ConfigureAwait(false);
+
             Console.Title = "NSB.Client";
             try
             {
@@ -69,7 +60,6 @@ namespace Client
                    a++;
                }
             }
-            Console.ForegroundColor = ConsoleColor.White;
         }
     }
 }

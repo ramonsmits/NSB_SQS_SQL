@@ -4,10 +4,7 @@ using NServiceBus.Persistence;
 using NServiceBus.Transport.SQLServer;
 using Shared.Events;
 using System;
-using System.Collections.Generic;
 using System.Configuration;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Subscriber1
@@ -15,23 +12,23 @@ namespace Subscriber1
     class Program
     {
         static SendAndProcessEndpoint<BaseEndpointConfig> _endpoint;
-        static void Main(string[] args)
+        static void Main()
         {
             _endpoint = new SendAndProcessEndpoint<BaseEndpointConfig>(new Subscriber1Config());
             AsyncMain().GetAwaiter().GetResult();
-            //AsyncMain1().GetAwaiter().GetResult();
-            AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
+            AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
         }
 
-        private static async Task AsyncMain()
+        static async Task AsyncMain()
         {
             _endpoint.Initialize();
             Console.Title = "NSB.Subscriber1";
-            await _endpoint.StartEndpoint();
+            await _endpoint.StartEndpoint()
+                .ConfigureAwait(false);
             Console.ReadKey();
         }
 
-        private static async Task AsyncMain1()
+        static async Task AsyncMain1()
         {
             Console.Title = "Samples.PubSub.Subscriber";
             var endpointConfiguration = new EndpointConfiguration("Samples.PubSub.Subscriber");

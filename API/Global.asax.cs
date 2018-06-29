@@ -12,7 +12,6 @@ using Shared.Command;
 using Amazon.S3;
 using Amazon.SQS;
 using Autofac;
-using Autofac.Integration.Mvc;
 using NServiceBus.Features;
 using NServiceBus.Persistence;
 using NServiceBus.Transport.SQLServer;

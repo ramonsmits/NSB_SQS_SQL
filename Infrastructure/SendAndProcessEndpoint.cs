@@ -1,9 +1,6 @@
 ﻿using NServiceBus;
 using Shared.Events;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Infrastructure
@@ -11,15 +8,9 @@ namespace Infrastructure
     public class SendAndProcessEndpoint<T>
           where T : BaseEndpointConfig
     {
-        #region Member Variables and Constatns
-
-        private readonly BaseEndpointConfig _endPointConfig;
-        private EndpointConfiguration _nsbConfig;
-        private IEndpointInstance _endpointInstance;
-
-        #endregion
-
-        #region Constructors
+        readonly BaseEndpointConfig _endPointConfig;
+        EndpointConfiguration _nsbConfig;
+        IEndpointInstance _endpointInstance;
 
         public SendAndProcessEndpoint(T config)
         {
@@ -28,10 +19,6 @@ namespace Infrastructure
 
             _endPointConfig = config;
         }
-
-        #endregion
-
-        #region Public Methods
 
         public virtual void Initialize()
         {
@@ -51,7 +38,6 @@ namespace Infrastructure
             throw new Exception("Can not initialize NSB endpoint instance");
         }
 
-
         public virtual IEndpointInstance GetEndpointInstance()
         {
             if (_endpointInstance != null)
@@ -66,35 +52,11 @@ namespace Infrastructure
                 _endpointInstance.Stop().GetAwaiter().GetResult();
         }
 
-        public virtual async Task SendMessage(ICommand message)
+        public virtual Task SendMessage(ICommand message)
         {
-            if (_endpointInstance != null)
-                await _endpointInstance.Send(message).ConfigureAwait(false);
+            return _endpointInstance != null
+                ? _endpointInstance.Send(message) 
+                : Task.CompletedTask;
         }
-
-        public virtual async Task SendMessage(string endpoint, ICommand message)
-        {
-            if (_endpointInstance != null)
-                await _endpointInstance.Send(endpoint,message).ConfigureAwait(false);
-        }
-
-        public virtual async Task Subscribe()
-        {
-            if (_endpointInstance != null)
-                await _endpointInstance.Subscribe<OrderPlaced>().ConfigureAwait(false);
-        }
-
-        public virtual void PublishMessage(IEvent message)
-        {
-            if (_endpointInstance != null)
-                _endpointInstance.Publish(message).ConfigureAwait(false);
-        }
-
-        public string GetEndpointName()
-        {
-            return _endPointConfig._configEndpointName;
-        }
-
-        #endregion
     }
 }

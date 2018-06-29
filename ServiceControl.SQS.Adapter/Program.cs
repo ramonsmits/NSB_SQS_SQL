@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Amazon.S3;
 using NServiceBus;
@@ -13,7 +10,7 @@ namespace ServiceControl.SQS.Adapter
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
             AsyncMain().GetAwaiter().GetResult();
             Console.ReadKey();
@@ -22,24 +19,20 @@ namespace ServiceControl.SQS.Adapter
         public static async Task AsyncMain()
         {
             Console.Title = "Samples.ServiceControl.SqsTransportAdapter.Adapter";
-            #region AdapterTransport
 
             var transportAdapterConfig = new TransportAdapterConfig<SqsTransport, MsmqTransport>("ServiceControl.SQS.Adapter");
             transportAdapterConfig.EndpointSideAuditQueue = "audit";
             transportAdapterConfig.EndpointSideErrorQueue = "error";
             transportAdapterConfig.EndpointSideControlQueue = "Particular.ServiceControl";
 
-            #endregion
-
-            #region EndpointSideConfig
 
             transportAdapterConfig.CustomizeEndpointTransport(transport =>
             {
-               var s3Configuration=transport.S3("nsb-poc", "name/order");
+                var s3Configuration = transport.S3("ramon-sqs", "name/order");
 
                 transport.ClientFactory(() => new AmazonSQSClient(new AmazonSQSConfig
                 {
-                    RegionEndpoint = RegionEndpoint.USEast1,
+                    RegionEndpoint = RegionEndpoint.EUWest1,
                 }));
 
                 s3Configuration.ClientFactory(() => new AmazonS3Client(
@@ -49,9 +42,7 @@ namespace ServiceControl.SQS.Adapter
                         }));
             });
 
-            #endregion
-
-            var adapter =TransportAdapter.TransportAdapter.Create(transportAdapterConfig);
+            var adapter = TransportAdapter.TransportAdapter.Create(transportAdapterConfig);
 
             await adapter.Start()
                 .ConfigureAwait(false);

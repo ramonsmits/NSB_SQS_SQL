@@ -1,40 +1,33 @@
-﻿using Amazon;
-using Amazon.Runtime;
-using Amazon.S3;
-using Amazon.SQS;
+﻿using System;
+using System.Configuration;
+using System.Threading.Tasks;
 using Infrastructure;
-using NHibernate.Cfg;
-using NHibernate.Dialect;
 using NServiceBus;
 using NServiceBus.Persistence;
 using NServiceBus.Transport.SQLServer;
 using Shared.Events;
-using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Configuration = NHibernate.Cfg.Configuration;
+using Environment = NHibernate.Cfg.Environment;
 
 namespace Server
 {
     class Program
     {
         static SendAndProcessEndpoint<BaseEndpointConfig> _endpoint;
-        static void Main(string[] args)
+        static void Main()
         {
             _endpoint = new SendAndProcessEndpoint<BaseEndpointConfig>(new ServerConfig());
             AsyncMain().GetAwaiter().GetResult();
-            //AsyncMain1().GetAwaiter().GetResult();
-            AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
+            AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
         }
 
-        private static async Task AsyncMain()
+        static async Task AsyncMain()
         {
             _endpoint.Initialize();
             Console.Title = "NSB.Server";
            
-            await _endpoint.StartEndpoint();
+            await _endpoint.StartEndpoint()
+                .ConfigureAwait(false);
             Console.ReadKey();
         }
 
@@ -52,12 +45,12 @@ namespace Server
 
             //Persistence
             var persistence = endpointConfiguration.UsePersistence<NHibernatePersistence>();
-            var nhConfig = new NHibernate.Cfg.Configuration();
-            nhConfig.SetProperty(NHibernate.Cfg.Environment.ConnectionProvider, "NHibernate.Connection.DriverConnectionProvider");
-            nhConfig.SetProperty(NHibernate.Cfg.Environment.ConnectionDriver, "NHibernate.Driver.Sql2008ClientDriver");
-            nhConfig.SetProperty(NHibernate.Cfg.Environment.Dialect, "NHibernate.Dialect.MsSql2008Dialect");
-            nhConfig.SetProperty(NHibernate.Cfg.Environment.ConnectionString, ConfigurationManager.ConnectionStrings["NSB_AWS.NHibernatePersistence"].ConnectionString);
-            nhConfig.SetProperty(NHibernate.Cfg.Environment.DefaultSchema, "nsb");
+            var nhConfig = new Configuration();
+            nhConfig.SetProperty(Environment.ConnectionProvider, "NHibernate.Connection.DriverConnectionProvider");
+            nhConfig.SetProperty(Environment.ConnectionDriver, "NHibernate.Driver.Sql2008ClientDriver");
+            nhConfig.SetProperty(Environment.Dialect, "NHibernate.Dialect.MsSql2008Dialect");
+            nhConfig.SetProperty(Environment.ConnectionString, ConfigurationManager.ConnectionStrings["NSB_AWS.NHibernatePersistence"].ConnectionString);
+            nhConfig.SetProperty(Environment.DefaultSchema, "nsb");
             persistence.UseConfiguration(nhConfig);
             //Transport
             var transport = endpointConfiguration.UseTransport<SqlServerTransport>()
@@ -83,8 +76,6 @@ namespace Server
             Console.WriteLine("Press '1' to publish the OrderReceived event");
             Console.WriteLine("Press any other key to exit");
 
-            #region PublishLoop
-
             while (true)
             {
                 var key = Console.ReadKey();
@@ -106,8 +97,6 @@ namespace Server
                     return;
                 }
             }
-
-            #endregion
         }
     }
  }

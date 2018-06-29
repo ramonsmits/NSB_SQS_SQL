@@ -18,16 +18,10 @@ namespace Infrastructure
 {
     public class BaseEndpointConfig : IEndpointConfig
     {
-        #region Member Variables and Constants
-
         internal string _configEndpointName;
         protected bool _isSendOnly;
 
         private readonly TimeSpan _slaTime;
-
-        #endregion
-
-        #region Constructors
 
         public BaseEndpointConfig() :
             this(null, false)
@@ -40,10 +34,6 @@ namespace Infrastructure
             _configEndpointName = string.IsNullOrEmpty(endpointName) ? GetEndpointName() : endpointName;
             _isSendOnly = isSendOnly;
         }
-
-        #endregion
-
-        #region IEndpointConfig Members
 
         public virtual EndpointConfiguration BuildConfig()
         {
@@ -159,10 +149,6 @@ namespace Infrastructure
             return endpointConfiguration;
         }
 
-        #endregion
-
-        #region Protected Methods
-
         protected string GetNsbLogPath()
         {
             var cfg = ConfigurationManager.AppSettings["LogPath"] ?? string.Empty;
@@ -210,11 +196,6 @@ namespace Infrastructure
 
             return cfg;
         }
-
-
-        #endregion
-
-        #region Private Methods
 
         private void ConfigureNsbLogger()
         {
@@ -269,6 +250,5 @@ namespace Infrastructure
             routing.RouteToEndpoint(typeof(PlaceOrder), "NSB.Server");
             return routing;
         }
-        #endregion
     }
 }

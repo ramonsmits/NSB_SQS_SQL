@@ -1,8 +1,5 @@
 ﻿using Infrastructure;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Subscriber2
@@ -10,11 +7,11 @@ namespace Subscriber2
     class Program
     {
         static SendAndProcessEndpoint<BaseEndpointConfig> _endpoint;
-        static void Main(string[] args)
+        static void Main()
         {
             _endpoint = new SendAndProcessEndpoint<BaseEndpointConfig>(new Subscriber2Config());
             AsyncMain().GetAwaiter().GetResult();
-            AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
+            AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
         }
 
         private static async Task AsyncMain()
@@ -22,7 +19,8 @@ namespace Subscriber2
             _endpoint.Initialize();
             Console.Title = "NSB.Subscriber2";
 
-            await _endpoint.StartEndpoint();
+            await _endpoint.StartEndpoint()
+                .ConfigureAwait(false);
             Console.ReadKey();
         }
 
