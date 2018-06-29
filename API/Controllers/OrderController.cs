@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using System.Web.Http;
 using NSB_AWS.API.Models;
 using Shared.Command;
@@ -8,7 +9,7 @@ namespace API.Controllers
 {
     public class OrderController : ApiController
     {
-        IEndpointInstance endpoint;
+        readonly IEndpointInstance endpoint;
 
         public OrderController(IEndpointInstance endpoint)
         {
@@ -17,16 +18,16 @@ namespace API.Controllers
 
         [Route("order")]
         [HttpPost]
-        public IHttpActionResult CommitOrder(Order order)
+        public async Task<IHttpActionResult> CommitOrder(Order order)
         {
-
             var placeOrder = new PlaceOrder
             {
                 Product = order.ProductCode,
                 Id = Guid.NewGuid()
             };
 
-            endpoint.Send("NSB.Server", placeOrder).ConfigureAwait(false);
+            await endpoint.Send("NSB.Server", placeOrder)
+                .ConfigureAwait(false);
 
             return Ok("Order received : " + placeOrder.Id);
         }
@@ -34,19 +35,18 @@ namespace API.Controllers
 
         [Route("bulkorder")]
         [HttpPost]
-        public IHttpActionResult BulkOrder(Order order)
+        public async Task<IHttpActionResult> BulkOrder(Order order)
         {
-
             var bulkOrder = new BulkOrder
             {
                 Data = new byte[257 * 1024],
                 Id = Guid.NewGuid()
             };
 
-            endpoint.Send("NSB.Server", bulkOrder).ConfigureAwait(false);
+            await endpoint.Send("NSB.Server", bulkOrder)
+                .ConfigureAwait(false);
 
             return Ok("Order received : " + bulkOrder.Id);
         }
-
     }
 }
