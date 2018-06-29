@@ -1,6 +1,7 @@
 ﻿using Infrastructure;
 using Shared.Command;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Client
@@ -34,31 +35,37 @@ namespace Client
 
         static async Task SendOrder()
         {
+            var tasks = new List<Task>();
             Console.ForegroundColor = ConsoleColor.White;
             while (true)
             {
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("Press enter number of messages to be sent");
                 Console.ForegroundColor = ConsoleColor.White;
-                var number =Convert.ToInt32(Console.ReadLine());
+                var number = Convert.ToInt32(Console.ReadLine());
                 int a = 0;
-                while (a < number) {
-                    var id = Guid.NewGuid();
 
+                while (a < number)
+                {
+                    var id = Guid.NewGuid();
                     var placeOrder = new PlaceOrder
                     {
                         Product = "New shoes",
                         Id = id
                     };
-                    await _endpoint.SendMessage(placeOrder)
-                        .ConfigureAwait(false);
-                    if(a%2==0)
+
+                    tasks.Add(_endpoint.SendMessage(placeOrder));
+
+                    if (a % 2 == 0)
                         Console.ForegroundColor = ConsoleColor.Yellow;
 
                     Console.ForegroundColor = ConsoleColor.White;
-                    Console.WriteLine("Sent a PlaceOrder message with id: {0} : {1}",a+1,id);
-                   a++;
-               }
+                    Console.WriteLine("Sent a PlaceOrder message with id: {0} : {1}", a + 1, id);
+                    a++;
+                }
+
+                await Task.WhenAll(tasks)
+                    .ConfigureAwait(false);
             }
         }
     }
