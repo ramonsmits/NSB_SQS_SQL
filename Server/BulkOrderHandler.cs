@@ -8,7 +8,6 @@ public class BulkOrderHandler :
 {
     public Task Handle(BulkOrder message, IMessageHandlerContext context)
     {
-        Console.Out.WriteLineAsync("Bulk Order placed with id: " + message.Id);
         return Task.CompletedTask;
     }
 }

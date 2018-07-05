@@ -9,8 +9,6 @@ public class PlaceOrderHandler :
 {
     public Task Handle(PlaceOrder message, IMessageHandlerContext context)
     {
-        Console.Out.WriteLineAsync("Order for Product:" + message.Product + " placed with id: " + message.Id);
-
         var orderPlaced = new OrderPlaced
         {
             OrderId = message.Id
