@@ -130,7 +130,7 @@ namespace API
             endpointConfiguration.SendOnly();
            
 
-            var _endpointInstance = Endpoint.Start(endpointConfiguration).GetAwaiter().GetResult();
+            _endpointInstance = Endpoint.Start(endpointConfiguration).GetAwaiter().GetResult();
 
             var builder = new ContainerBuilder();
             builder.RegisterInstance(_endpointInstance);
