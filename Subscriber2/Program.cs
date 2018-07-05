@@ -16,8 +16,8 @@ namespace Subscriber2
 
         static async Task AsyncMain()
         {
-            _endpoint.Initialize();
             Console.Title = "NSB.Subscriber2";
+            _endpoint.Initialize();
 
             await _endpoint.StartEndpoint()
                 .ConfigureAwait(false);

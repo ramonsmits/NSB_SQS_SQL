@@ -17,11 +17,11 @@ namespace Client
 
         static async Task AsyncMain()
         {
+            Console.Title = "NSB.Client";
             _endpoint.Initialize();
             await _endpoint.StartEndpoint()
                 .ConfigureAwait(false);
 
-            Console.Title = "NSB.Client";
             try
             {
                 await SendOrder()

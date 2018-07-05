@@ -16,8 +16,8 @@ namespace Server
 
         static async Task AsyncMain()
         {
-            _endpoint.Initialize();
             Console.Title = "NSB.Server";
+            _endpoint.Initialize();
            
             await _endpoint.StartEndpoint()
                 .ConfigureAwait(false);

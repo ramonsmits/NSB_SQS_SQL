@@ -5,14 +5,11 @@ using NServiceBus;
 using NServiceBus.Features;
 using NServiceBus.Logging;
 using NServiceBus.Persistence;
-using NServiceBus.Transport.SQLServer;
 using Shared.Command;
 using Shared.Events;
 using System;
-using System.Configuration;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using NServiceBus.Persistence.NHibernate;
+using NServiceBus.Transport.SQLServer;
 
 namespace Infrastructure
 {
@@ -23,7 +20,7 @@ namespace Infrastructure
 
         protected BaseEndpointConfig(string endpointName, bool isSendOnly)
         {
-            _configEndpointName = string.IsNullOrEmpty(endpointName) ? GetEndpointName() : endpointName;
+            _configEndpointName = endpointName;
             _isSendOnly = isSendOnly;
         }
 
@@ -41,33 +38,24 @@ namespace Infrastructure
                 endpointConfiguration.SendOnly();
 
             //Transport
-            var transportType = ConfigurationManager.AppSettings["transportType"];
-
-            if (string.IsNullOrEmpty(transportType))
-                throw new Exception("Provide TransportType in configuration");
+            var transportType = TransportType.Learning;
 
             //serializer
             endpointConfiguration.UseSerialization<XmlSerializer>();
 
+            var connectionString = "Server=.;Initial Catalog=NSB_AWS_SQL;Integrated Security=True";
             var persistence = endpointConfiguration.UsePersistence<NHibernatePersistence>();
             var nhConfig = new NHibernate.Cfg.Configuration();
             nhConfig.SetProperty(NHibernate.Cfg.Environment.ConnectionProvider, typeof(NHibernate.Connection.DriverConnectionProvider).FullName);
             nhConfig.SetProperty(NHibernate.Cfg.Environment.ConnectionDriver, typeof(NHibernate.Driver.Sql2008ClientDriver).FullName);
             nhConfig.SetProperty(NHibernate.Cfg.Environment.Dialect, typeof(NHibernate.Dialect.MsSql2008Dialect).FullName);
-            nhConfig.SetProperty(NHibernate.Cfg.Environment.ConnectionStringName,
-                (TransportType)Enum.Parse(typeof(TransportType), transportType) == TransportType.Sql
-                    ? "NSB_AWS.SQL.NHibernatePersistence"
-                    : "NSB_AWS.SQS.NHibernatePersistence"
-                );
-
+            nhConfig.SetProperty(NHibernate.Cfg.Environment.ConnectionString, connectionString);
             nhConfig.SetProperty(NHibernate.Cfg.Environment.DefaultSchema, "dbo");
 
             persistence.UseConfiguration(nhConfig);
             persistence.EnableCachingForSubscriptionStorage(TimeSpan.FromSeconds(10));
 
-
-
-            switch ((TransportType)Convert.ToInt32(transportType))
+            switch (transportType)
             {
                 case TransportType.Sql:
                     {
@@ -75,8 +63,8 @@ namespace Infrastructure
                         endpointConfiguration.AuditProcessedMessagesTo("audit");
 
 
-                        var transport = endpointConfiguration.UseTransport<SqlServerTransport>()
-                                       .ConnectionString(ConfigurationManager.ConnectionStrings["NSB_AWS.SQL.SqlServerTransport"].ConnectionString);
+                        var transport = endpointConfiguration.UseTransport<SqlServerTransport>();
+                        transport.ConnectionString(connectionString);
                         transport.DefaultSchema("dbo");
                         BuildEndpointSQLRouting(transport.Routing());
                         break;
@@ -88,10 +76,9 @@ namespace Infrastructure
                         endpointConfiguration.AuditProcessedMessagesTo("audit");
 
                         var region = RegionEndpoint.EUWest1;
+                        var S3BucketName = "ramon-sqs";
+                        var S3KeyPrefix = "support/20180629";
 
-                        //S3 Setting
-                        var S3BucketName = ConfigurationManager.AppSettings["S3BucketName"];
-                        var S3KeyPrefix = ConfigurationManager.AppSettings["S3KeyPrefix"];
 
                         var transport = endpointConfiguration.UseTransport<SqsTransport>();
                         transport.ClientFactory(() => new AmazonSQSClient(
@@ -144,69 +131,10 @@ namespace Infrastructure
             return endpointConfiguration;
         }
 
-        string GetNsbLogPath()
-        {
-            var cfg = ConfigurationManager.AppSettings["LogPath"] ?? string.Empty;
-            return cfg;
-        }
-
-        LogLevel GetNsbLogLevel()
-        {
-            var cfg = ConfigurationManager.AppSettings["LogLevel"] ?? string.Empty;
-
-            switch (cfg.ToLower())
-            {
-                case "debug":
-                    return LogLevel.Debug;
-                case "info":
-                    return LogLevel.Info;
-                case "warn":
-                    return LogLevel.Warn;
-                case "error":
-                    return LogLevel.Error;
-                case "fatal":
-                    return LogLevel.Fatal;
-                default:
-                    return LogLevel.Info;
-            }
-        }
-
-        [SuppressMessage("ReSharper", "NotResolvedInText")]
-        protected string GetEndpointName()
-        {
-            var cfg = ConfigurationManager.AppSettings["EndpointName"] ?? string.Empty;
-            if (string.IsNullOrEmpty(cfg))
-                throw new ArgumentNullException("EndpointName cannot be null or empty in the endpoint config file");
-
-            return cfg;
-        }
-
         private void ConfigureNsbLogger()
         {
             var defaultFactory = LogManager.Use<DefaultFactory>();
-            defaultFactory.Level(GetNsbLogLevel());
-
-            var usePath = true;
-            var path = GetNsbLogPath();
-
-            if (!string.IsNullOrEmpty(path))
-            {
-                if (!Directory.Exists(path))
-                {
-                    try
-                    {
-                        Directory.CreateDirectory(path);
-                    }
-                    catch
-                    {
-                        // Do nothing, default location is used
-                        usePath = false;
-                    }
-                }
-            }
-
-            if (usePath)
-                defaultFactory.Directory(path);
+            defaultFactory.Level(LogLevel.Warn);
         }
 
 
