@@ -8,8 +8,13 @@ using NServiceBus.Persistence;
 using Shared.Command;
 using Shared.Events;
 using System;
+using System.Net;
+using System.Runtime;
+using NHibernate.Cfg;
 using NServiceBus.Persistence.NHibernate;
 using NServiceBus.Transport.SQLServer;
+using NServiceBus.Transport;
+using Environment = System.Environment;
 
 namespace Infrastructure
 {
@@ -26,6 +31,10 @@ namespace Infrastructure
 
         public virtual EndpointConfiguration BuildConfig()
         {
+            GCSettings.LatencyMode = GCLatencyMode.Batch; // https://docs.microsoft.com/en-us/dotnet/standard/garbage-collection/latency
+            ServicePointManager.Expect100Continue = false;
+            ServicePointManager.UseNagleAlgorithm = false;
+            ServicePointManager.DefaultConnectionLimit = 125; // Querying of DefaultConnectionLimit on dotnet core does not return assigned value
             //logger
             ConfigureNsbLogger();
 
@@ -41,7 +50,7 @@ namespace Infrastructure
                 endpointConfiguration.SendOnly();
 
             //Transport
-            var transportType = TransportType.Sql;
+            var transportType = TransportType.Sqs;
 
             //serializer
             endpointConfiguration.UseSerialization<XmlSerializer>();
@@ -51,33 +60,30 @@ namespace Infrastructure
             var nhConfig = new NHibernate.Cfg.Configuration();
             nhConfig.SetProperty(NHibernate.Cfg.Environment.ConnectionProvider, typeof(NHibernate.Connection.DriverConnectionProvider).FullName);
             nhConfig.SetProperty(NHibernate.Cfg.Environment.ConnectionDriver, typeof(NHibernate.Driver.Sql2008ClientDriver).FullName);
-            nhConfig.SetProperty(NHibernate.Cfg.Environment.Dialect, typeof(NHibernate.Dialect.MsSql2008Dialect).FullName);
+            nhConfig.SetProperty(NHibernate.Cfg.Environment.Dialect, typeof(NHibernate.Dialect.MsSql2012Dialect).FullName);
             nhConfig.SetProperty(NHibernate.Cfg.Environment.ConnectionString, connectionString);
             nhConfig.SetProperty(NHibernate.Cfg.Environment.DefaultSchema, "dbo");
 
             persistence.UseConfiguration(nhConfig);
             persistence.EnableCachingForSubscriptionStorage(TimeSpan.FromSeconds(10));
 
+            endpointConfiguration.SendFailedMessagesTo("error");
+            //endpointConfiguration.AuditProcessedMessagesTo("audit");
+            //endpointConfiguration.EnableOutbox();
+
             switch (transportType)
             {
                 case TransportType.Sql:
                     {
-                        endpointConfiguration.SendFailedMessagesTo("error");
-                        endpointConfiguration.AuditProcessedMessagesTo("audit");
-
-
                         var transport = endpointConfiguration.UseTransport<SqlServerTransport>();
                         transport.ConnectionString(connectionString);
                         transport.DefaultSchema("dbo");
+                        transport.Transactions(TransportTransactionMode.ReceiveOnly);
                         BuildEndpointSQLRouting(transport.Routing());
                         break;
                     }
                 case TransportType.Sqs:
                     {
-                        //ERROR and AUDIT queue
-                        endpointConfiguration.SendFailedMessagesTo("error");
-                        endpointConfiguration.AuditProcessedMessagesTo("audit");
-
                         var region = RegionEndpoint.EUWest1;
                         var S3BucketName = "ramon-sqs";
                         var S3KeyPrefix = "support/20180629";
@@ -100,13 +106,11 @@ namespace Infrastructure
 
                         //Routing
                         BuildEndpointSQSRouting(transport.Routing());
-                        endpointConfiguration.EnableOutbox();
+                        transport.QueueNamePrefix("ramon-support-20180629-");
                         break;
                     }
                 case TransportType.Learning:
                     {
-                        endpointConfiguration.SendFailedMessagesTo("error");
-                        endpointConfiguration.AuditProcessedMessagesTo("audit");
                         endpointConfiguration.UsePersistence<LearningPersistence>();
                         var transport = endpointConfiguration.UseTransport<LearningTransport>();
                         endpointConfiguration.DisableFeature<TimeoutManager>(); // REVIEW: Why are you disabling the timeout manager??
