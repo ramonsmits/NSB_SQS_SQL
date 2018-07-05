@@ -17,12 +17,10 @@ namespace Infrastructure
 {
     public class BaseEndpointConfig : IEndpointConfig
     {
-        string _configEndpointName;
-        bool _isSendOnly;
+        readonly string _configEndpointName;
+        readonly bool _isSendOnly;
 
-        private readonly TimeSpan _slaTime;
-
-        public BaseEndpointConfig(string endpointName, bool isSendOnly)
+        protected BaseEndpointConfig(string endpointName, bool isSendOnly)
         {
             _configEndpointName = string.IsNullOrEmpty(endpointName) ? GetEndpointName() : endpointName;
             _isSendOnly = isSendOnly;
