@@ -12,6 +12,7 @@ using System;
 using System.Configuration;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using NServiceBus.Persistence.NHibernate;
 
 namespace Infrastructure
 {
@@ -62,6 +63,7 @@ namespace Infrastructure
             nhConfig.SetProperty(NHibernate.Cfg.Environment.DefaultSchema, "dbo");
 
             persistence.UseConfiguration(nhConfig);
+            persistence.EnableCachingForSubscriptionStorage(TimeSpan.FromSeconds(10));
 
 
 
