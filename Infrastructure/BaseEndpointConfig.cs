@@ -213,7 +213,6 @@ namespace Infrastructure
         {
             routing.RouteToEndpoint(typeof(PlaceOrder), "NSB.Server");
             routing.RegisterPublisher(typeof(OrderPlaced), "NSB.Server");
-            routing.RegisterPublisher(typeof(BulkOrderPlaced), "NSB.Server");
             return routing;
         }
 
@@ -222,7 +221,6 @@ namespace Infrastructure
         {
             routing.RouteToEndpoint(typeof(PlaceOrder), "NSB.Server");
             routing.RegisterPublisher(typeof(OrderPlaced), "NSB.Server");
-            routing.RegisterPublisher(typeof(BulkOrderPlaced), "NSB.Server");
             return routing;
         }
 

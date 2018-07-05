@@ -47,7 +47,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BulkOrderPlaced.cs" />
     <Compile Include="OrderPlaced.cs" />
     <Compile Include="BulkOrder.cs" />
     <Compile Include="PlaceOrder.cs" />
