@@ -12,22 +12,15 @@ using System;
 using System.Configuration;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Collections.Generic;
 
 namespace Infrastructure
 {
     public class BaseEndpointConfig : IEndpointConfig
     {
-        internal string _configEndpointName;
-        protected bool _isSendOnly;
+        string _configEndpointName;
+        bool _isSendOnly;
 
         private readonly TimeSpan _slaTime;
-
-        public BaseEndpointConfig() :
-            this(null, false)
-        {
-            _slaTime = TimeSpan.FromSeconds(1);
-        }
 
         public BaseEndpointConfig(string endpointName, bool isSendOnly)
         {
@@ -56,23 +49,23 @@ namespace Infrastructure
 
             //serializer
             endpointConfiguration.UseSerialization<XmlSerializer>();
-           
+
             var persistence = endpointConfiguration.UsePersistence<NHibernatePersistence>();
             var nhConfig = new NHibernate.Cfg.Configuration();
-            nhConfig.SetProperty(NHibernate.Cfg.Environment.ConnectionProvider, "NHibernate.Connection.DriverConnectionProvider");
-            nhConfig.SetProperty(NHibernate.Cfg.Environment.ConnectionDriver, "NHibernate.Driver.Sql2008ClientDriver");
-            nhConfig.SetProperty(NHibernate.Cfg.Environment.Dialect, "NHibernate.Dialect.MsSql2008Dialect");
-
-            if((TransportType)Convert.ToInt32(transportType)== TransportType.Sql)
-            nhConfig.SetProperty(NHibernate.Cfg.Environment.ConnectionString, ConfigurationManager.ConnectionStrings["NSB_AWS.SQL.NHibernatePersistence"].ConnectionString);
-            else if ((TransportType)Convert.ToInt32(transportType) == TransportType.Sqs)
-                nhConfig.SetProperty(NHibernate.Cfg.Environment.ConnectionString, ConfigurationManager.ConnectionStrings["NSB_AWS.SQS.NHibernatePersistence"].ConnectionString);
+            nhConfig.SetProperty(NHibernate.Cfg.Environment.ConnectionProvider, typeof(NHibernate.Connection.DriverConnectionProvider).FullName);
+            nhConfig.SetProperty(NHibernate.Cfg.Environment.ConnectionDriver, typeof(NHibernate.Driver.Sql2008ClientDriver).FullName);
+            nhConfig.SetProperty(NHibernate.Cfg.Environment.Dialect, typeof(NHibernate.Dialect.MsSql2008Dialect).FullName);
+            nhConfig.SetProperty(NHibernate.Cfg.Environment.ConnectionStringName,
+                (TransportType)Enum.Parse(typeof(TransportType), transportType) == TransportType.Sql
+                    ? "NSB_AWS.SQL.NHibernatePersistence"
+                    : "NSB_AWS.SQS.NHibernatePersistence"
+                );
 
             nhConfig.SetProperty(NHibernate.Cfg.Environment.DefaultSchema, "dbo");
-            
+
             persistence.UseConfiguration(nhConfig);
-                                          
-            
+
+
 
             switch ((TransportType)Convert.ToInt32(transportType))
             {
@@ -93,7 +86,9 @@ namespace Infrastructure
                         //ERROR and AUDIT queue
                         endpointConfiguration.SendFailedMessagesTo("error");
                         endpointConfiguration.AuditProcessedMessagesTo("audit");
-                 
+
+                        var region = RegionEndpoint.EUWest1;
+
                         //S3 Setting
                         var S3BucketName = ConfigurationManager.AppSettings["S3BucketName"];
                         var S3KeyPrefix = ConfigurationManager.AppSettings["S3KeyPrefix"];
@@ -102,15 +97,15 @@ namespace Infrastructure
                         transport.ClientFactory(() => new AmazonSQSClient(
                         new AmazonSQSConfig
                         {
-                            RegionEndpoint = RegionEndpoint.USEast1,
-                            MaxErrorRetry=2,
+                            RegionEndpoint = region,
+                            MaxErrorRetry = 2,
                         }));
 
                         var s3Configuration = transport.S3(S3BucketName, S3KeyPrefix);
                         s3Configuration.ClientFactory(() => new AmazonS3Client(
                         new AmazonS3Config
                         {
-                            RegionEndpoint = RegionEndpoint.USEast1
+                            RegionEndpoint = region
                         }));
 
                         //Routing
@@ -124,7 +119,7 @@ namespace Infrastructure
                         endpointConfiguration.AuditProcessedMessagesTo("audit");
                         endpointConfiguration.UsePersistence<LearningPersistence>();
                         var transport = endpointConfiguration.UseTransport<LearningTransport>();
-                        endpointConfiguration.DisableFeature<TimeoutManager>();
+                        endpointConfiguration.DisableFeature<TimeoutManager>(); // REVIEW: Why are you disabling the timeout manager??
                         BuildEndpointLearningRouting(transport.Routing());
                         break;
                     }
@@ -133,7 +128,7 @@ namespace Infrastructure
                     throw new Exception("Unexpected Case");
             }
 
-           
+
             //Auto installer
             //#if DEBUG
             endpointConfiguration.EnableInstallers();
@@ -149,13 +144,13 @@ namespace Infrastructure
             return endpointConfiguration;
         }
 
-        protected string GetNsbLogPath()
+        string GetNsbLogPath()
         {
             var cfg = ConfigurationManager.AppSettings["LogPath"] ?? string.Empty;
             return cfg;
         }
 
-        protected LogLevel GetNsbLogLevel()
+        LogLevel GetNsbLogLevel()
         {
             var cfg = ConfigurationManager.AppSettings["LogLevel"] ?? string.Empty;
 
@@ -175,17 +170,6 @@ namespace Infrastructure
                     return LogLevel.Info;
             }
         }
-
-        protected string GetAuditQueueName()
-        {
-            return "audit";
-        }
-
-        protected string GetErrorQueueName()
-        {
-            return "error";
-        }
-
 
         [SuppressMessage("ReSharper", "NotResolvedInText")]
         protected string GetEndpointName()

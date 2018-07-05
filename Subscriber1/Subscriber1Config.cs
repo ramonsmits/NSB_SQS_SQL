@@ -1,5 +1,4 @@
 ﻿using Infrastructure;
-using NServiceBus;
 
 namespace Subscriber1
 {
@@ -13,12 +12,6 @@ namespace Subscriber1
         public Subscriber1Config(string endpointName, bool isSendOnly) : 
             base(endpointName, isSendOnly)
         {
-        }
-
-        public override EndpointConfiguration BuildConfig()
-        {
-            var config = base.BuildConfig();
-            return config;
         }
     }
 }

@@ -20,25 +20,29 @@ namespace ServiceControl.SQS.Adapter
         {
             Console.Title = "Samples.ServiceControl.SqsTransportAdapter.Adapter";
 
-            var transportAdapterConfig = new TransportAdapterConfig<SqsTransport, MsmqTransport>("ServiceControl.SQS.Adapter");
-            transportAdapterConfig.EndpointSideAuditQueue = "audit";
-            transportAdapterConfig.EndpointSideErrorQueue = "error";
-            transportAdapterConfig.EndpointSideControlQueue = "Particular.ServiceControl";
-
+            var transportAdapterConfig =
+                new TransportAdapterConfig<SqsTransport, MsmqTransport>("ServiceControl.SQS.Adapter")
+                {
+                    EndpointSideAuditQueue = "audit",
+                    EndpointSideErrorQueue = "error",
+                    EndpointSideControlQueue = "Particular.ServiceControl"
+                };
 
             transportAdapterConfig.CustomizeEndpointTransport(transport =>
             {
-                var s3Configuration = transport.S3("ramon-sqs", "name/order");
+                var s3Configuration = transport.S3("ramon-sqs", "support/20180629");
+
+                var region = RegionEndpoint.EUWest1;
 
                 transport.ClientFactory(() => new AmazonSQSClient(new AmazonSQSConfig
                 {
-                    RegionEndpoint = RegionEndpoint.EUWest1,
+                    RegionEndpoint = region,
                 }));
 
                 s3Configuration.ClientFactory(() => new AmazonS3Client(
                         new AmazonS3Config
                         {
-                            RegionEndpoint = RegionEndpoint.USEast1
+                            RegionEndpoint = region
                         }));
             });
 

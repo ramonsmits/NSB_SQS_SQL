@@ -14,7 +14,7 @@ namespace Subscriber2
             AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
         }
 
-        private static async Task AsyncMain()
+        static async Task AsyncMain()
         {
             _endpoint.Initialize();
             Console.Title = "NSB.Subscriber2";

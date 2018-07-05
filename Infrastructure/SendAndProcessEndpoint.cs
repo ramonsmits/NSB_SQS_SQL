@@ -1,5 +1,4 @@
 ﻿using NServiceBus;
-using Shared.Events;
 using System;
 using System.Threading.Tasks;
 
@@ -28,22 +27,6 @@ namespace Infrastructure
         public virtual async Task StartEndpoint()
         {
             _endpointInstance = await Endpoint.Start(_nsbConfig).ConfigureAwait(false);
-        }
-
-        public virtual EndpointConfiguration GetEndpointConfig()
-        {
-            if (_nsbConfig != null)
-                return _nsbConfig;
-
-            throw new Exception("Can not initialize NSB endpoint instance");
-        }
-
-        public virtual IEndpointInstance GetEndpointInstance()
-        {
-            if (_endpointInstance != null)
-                return _endpointInstance;
-
-            throw new Exception("Can not initialize NSB endpoint instance");
         }
 
         public virtual void StopEndpoint()

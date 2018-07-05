@@ -1,5 +1,4 @@
 ﻿using Infrastructure;
-using NServiceBus;
 
 namespace Server
 {
@@ -13,11 +12,6 @@ namespace Server
         public ServerConfig(string endpointName, bool isSendOnly) :
             base(endpointName, isSendOnly)
         {
-        }
-
-        public override EndpointConfiguration BuildConfig()
-        {
-            return base.BuildConfig();
         }
     }
 }
