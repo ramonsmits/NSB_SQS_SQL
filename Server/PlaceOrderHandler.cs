@@ -9,10 +9,7 @@ public class PlaceOrderHandler :
 {
     public Task Handle(PlaceOrder message, IMessageHandlerContext context)
     {
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine("Order for Product:" + message.Product + " placed with id: " + message.Id);
-        Console.ForegroundColor = ConsoleColor.White;
-        Console.WriteLine("Publishing: OrderPlaced for Order Id: " + message.Id);
+        Console.Out.WriteLineAsync("Order for Product:" + message.Product + " placed with id: " + message.Id);
 
         var orderPlaced = new OrderPlaced
         {

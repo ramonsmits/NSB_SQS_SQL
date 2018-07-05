@@ -34,16 +34,19 @@ namespace Infrastructure
                 throw new ArgumentNullException(_configEndpointName, "Endpoint name cannot be null");
 
             var endpointConfiguration = new EndpointConfiguration(_configEndpointName);
+
+            endpointConfiguration.LimitMessageProcessingConcurrencyTo(Environment.ProcessorCount * 4);
+
             if (_isSendOnly)
                 endpointConfiguration.SendOnly();
 
             //Transport
-            var transportType = TransportType.Learning;
+            var transportType = TransportType.Sql;
 
             //serializer
             endpointConfiguration.UseSerialization<XmlSerializer>();
 
-            var connectionString = "Server=.;Initial Catalog=NSB_AWS_SQL;Integrated Security=True";
+            var connectionString = "Server=.;Initial Catalog=support/20180629;Integrated Security=True";
             var persistence = endpointConfiguration.UsePersistence<NHibernatePersistence>();
             var nhConfig = new NHibernate.Cfg.Configuration();
             nhConfig.SetProperty(NHibernate.Cfg.Environment.ConnectionProvider, typeof(NHibernate.Connection.DriverConnectionProvider).FullName);

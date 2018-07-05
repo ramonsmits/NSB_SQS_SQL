@@ -8,8 +8,7 @@ public class BulkOrderHandler :
 {
     public Task Handle(BulkOrder message, IMessageHandlerContext context)
     {
-        Console.WriteLine("Bulk Order placed with id: " + message.Id);
-        Console.WriteLine("Publishing: BulkOrderPlaced for Order Id: " + message.Id);
+        Console.Out.WriteLineAsync("Bulk Order placed with id: " + message.Id);
         return Task.CompletedTask;
     }
 }

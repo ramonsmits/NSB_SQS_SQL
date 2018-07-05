@@ -56,16 +56,14 @@ namespace Client
 
                     tasks.Add(_endpoint.SendMessage(placeOrder));
 
-                    if (a % 2 == 0)
-                        Console.ForegroundColor = ConsoleColor.Yellow;
 
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.WriteLine("Sent a PlaceOrder message with id: {0} : {1}", a + 1, id);
                     a++;
                 }
 
                 await Task.WhenAll(tasks)
                     .ConfigureAwait(false);
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("Sending complete!");
             }
         }
     }
